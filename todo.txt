@@ -1,0 +1,9 @@
+Still need to:
+
+Implement basic behavior for Text Unit widget
+    (probably find a basic open-source WYSIWYG editor rather than rolling my own thing based on contenteditable)
+Dynamically create Text Unit widgets
+Saving and loading:
+    to/from Web Storage
+    to/from JSON
+    export to more usable text
