@@ -2,28 +2,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>Pretty Good - a writer's tool</title>
-        <link href="main.css" rel="stylesheet" type="text/css" title="Default Style">
+        <link href="default.css" rel="stylesheet" type="text/css" title="Default Style">
     </head>
     <body>
         <div id="header"> <!-- main menu content goes in here -->
-            Pretty Good
+            <h2>Pretty Good</h2>
         </div>
+
         <div id="workspace">
-            <div id="adder-left"></div>
-            <div id="adder-right"></div>
-            
             <!-- lots of these things will be created -->
             <div class="text-unit">
-                <div class="unit-head">
-                    <!-- user notes and controls in here -->
+                <div class="unit-head" contenteditable="true">
+                    <p class="head-area"></p></ul>
                 </div>
-                <div class="unit-body">
-                    <!-- user text in here -->
+                <div class="unit-body" contenteditable="true">
+                    <pre class="body-area"></pre>
                 </div>
-            </div><!-- work-unit -->
+            </div><!-- text-unit -->
             <!-- the above is preserved for reference, but
                  later just add them dynamically -->
-            
         </div> <!-- workspace -->
     </body>
 </html>
