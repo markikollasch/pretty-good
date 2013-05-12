@@ -11,20 +11,48 @@ body {
     overflow-x: hidden;
 }
 
+.workspace {
+    background-color: white;
+}
+
 .text-unit {
-    border: 1px solid black;
+    background-color: white;
     width: 100%;
     height: auto;
-    float: left;
-    display: table;
+    border-collapse: collapse;
+    border: 1px solid black;
+}
+.text-unit[data-status="0"] .unit-head {
+    background-color: #ffffff;
+}
+.text-unit[data-status="1"] .unit-head {
+    background-color: #cccccc;
+}
+.text-unit[data-status="2"] .unit-head {
+    background-color: #ffcccc;
+}
+.text-unit[data-status="3"] .unit-head {
+    background-color: #ffffcc;
+}
+.text-unit[data-status="4"] .unit-head {
+    background-color: #ccffcc;
+}
+
+.unit-editor {
+    display: table-row;
+    min-height: 1em;
+    width: 100%;
+}
+/* a hack to ensure visibility while empty */
+.unit-editor:after {
+    content: "\00a0";
+    visibility: collapse;
 }
 
 .unit-head {
-    border: 1px dotted black;
     width: 30%;
-    height: 100%;
     display: table-cell;
-    vertical-align: top;
+    border-right: solid 1px black;
     font-family: monospace;
     cursor: text;
 }
@@ -34,23 +62,24 @@ body {
 
 .unit-body {
     display: table-cell;
-    border: 1px dashed black;
     width: 70%;
-    height: 100%;
-    vertical-align: top;
-    overflow: hidden;
     font-family: monospace;
     cursor: text;
 }
 
 .unit-controls {
-    display: table-cell;
-    height: 100%;
-    overflow: hidden;
+    border-top: solid 1px black;
+    display: table-footer-group;
+    height: 0;
     text-align: center;
     vertical-align: middle;
     font-family: monospace;
+    visibility: collapse;
+    background-color: cyan;
 }
-.unit-controls-inner {
-    display: inline-block;
+
+[contenteditable="true"]:active,
+[contenteditable="true"]:focus {
+    border: 1px dashed red;
+    outline: 1px dashed red;
 }
