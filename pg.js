@@ -29,31 +29,33 @@ pg.Status = {
     BAD: {value: 2, name: "Bad"},
     OK: {value: 3, name: "Pretty Good"},
     GREAT: {value: 4, name: "Great"},
-    fromValue: function(v) {
-        switch(v) {
-            case undefined:
-            case 0:
-            case "0":
-                return pg.Status.BLANK;
-                break;
-            case 1:
-            case "1":
-                return pg.Status.UNFINISHED;
-                break;
-            case 2:
-            case "2":
-                return pg.Status.BAD;
-                break;
-            case 3:
-            case "3":
-                return pg.Status.OK;
-                break;
-            case 4:
-            case "4":
-                return pg.Status.GREAT;
-                break;
-        }
+};
+pg.Status.fromValue = function(v) {
+    var s;
+    switch(v) {
+        case undefined:
+        case 0:
+        case "0":
+            s = pg.Status.BLANK;
+            break;
+        case 1:
+        case "1":
+            s = pg.Status.UNFINISHED;
+            break;
+        case 2:
+        case "2":
+            s = pg.Status.BAD;
+            break;
+        case 3:
+        case "3":
+            s = pg.Status.OK;
+            break;
+        case 4:
+        case "4":
+            s = pg.Status.GREAT;
+            break;
     }
+    return s;
 };
 if (Object.freeze) { Object.freeze(pg.Status); }
 
@@ -61,8 +63,9 @@ if (Object.freeze) { Object.freeze(pg.Status); }
 pg.TextUnit = function(t, n, s) {
     /*  <table class="text-unit" data-status="Whatever">
      *      <tr class="unit-editor">
-     *          <td class="unit-head></td>
-     *          <td class="unit-body></td>
+     *          <td class="head-container"><div class="unit-head"></div></td>
+     *          <td class="unit-body"></td>
+     *          <td class="unit-summary"></td>
      *      </tr>
      *      <tfoot class="unit-controls" colspan="2">
      *          <td class="unit-controls-inner" colspan="2"></td>
@@ -76,82 +79,146 @@ pg.TextUnit = function(t, n, s) {
     this.rootDiv = document.createElement("table");
     this.rootDiv.className = "text-unit";
     this.setStatus(status);
-    //this.rootDiv.setAttribute("data-status", status.value);
     
     this.editorDiv = document.createElement("tr");
     this.editorDiv.className = "unit-editor";
     
     // head
-    this.headDiv = document.createElement("td");
+    var headContainer = document.createElement("td");
+    headContainer.className = "head-container";
+    this.headDiv = document.createElement("div");
     this.headDiv.className = "unit-head";
     this.headDiv.contentEditable = true;
+    headContainer.appendChild(this.headDiv);
     this.setNotes(notes);
-    //headDiv.innerHTML = notes;
     this.headDiv.addEventListener("input", function(e) {
-        requireSave(); });
+        pg.requireSave(); });
     
     // body
     this.bodyDiv = document.createElement("td");
     this.bodyDiv.className = "unit-body";
     this.bodyDiv.contentEditable = true;
     this.setText(text);
-    //bodyDiv.innerHTML = text;
     this.bodyDiv.addEventListener("input", function(e) {
-        requireSave(); });
+        pg.requireSave(); });
+    
+    // summary - only visible when not expanded
+    this.summaryDiv = document.createElement("td");
+    this.summaryDiv.className = "unit-summary";
+    this.setExpanded(true);
+    
+    var expandBtn = document.createElement("button");
+    expandBtn.innerHTML = "Expand";
+    expandBtn.addEventListener("click", (function(e) { this.setExpanded(true); }).bind(this));
+    this.summaryDiv.appendChild(expandBtn);
     
     // controls
     var ctrlDiv = document.createElement("tfoot");
     ctrlDiv.className = "unit-controls";
     var ctrlDivInner = document.createElement("td");
     ctrlDivInner.className = "unit-controls-inner";
-    ctrlDivInner.colSpan = "2";
+    ctrlDivInner.colSpan = "3";
+    
+    var statusBtns = [];
+    for (var i=0; i<5; i++) {
+        var statusBtn = document.createElement("button");
+        statusBtn.innerHTML = "&nbsp;";
+        statusBtn.className = "status-" + i;
+        ctrlDivInner.appendChild(statusBtn);
+        statusBtns.push(statusBtn);
+    }
+    statusBtns[0].addEventListener("click", (function(e) { this.setStatus(pg.Status.BLANK); }).bind(this));
+    statusBtns[1].addEventListener("click", (function(e) { this.setStatus(pg.Status.UNFINISHED); }).bind(this));
+    statusBtns[2].addEventListener("click", (function(e) { this.setStatus(pg.Status.BAD); }).bind(this));
+    statusBtns[3].addEventListener("click", (function(e) { this.setStatus(pg.Status.OK); }).bind(this));
+    statusBtns[4].addEventListener("click", (function(e) { this.setStatus(pg.Status.GREAT); }).bind(this));
+    
     
     var addBtn = document.createElement("button");
     addBtn.innerHTML = "Add new...";
-    var addBtn_click = (function(e) { this.addNew(this); }).bind(this);
-    addBtn.addEventListener("click", addBtn_click);
+    addBtn.addEventListener("click", (function(e) { this.addNew(this); }).bind(this));
     ctrlDivInner.appendChild(addBtn);
     
     var delBtn = document.createElement("button");
     delBtn.innerHTML = "Delete!";
-    var delBtn_click = (function(e) { this.deleteCurrent(); }).bind(this);
-    delBtn.addEventListener("click", delBtn_click);
+    delBtn.addEventListener("click", (function(e) { this.deleteCurrent(); }).bind(this));
     ctrlDivInner.appendChild(delBtn);
+    
+    var collapseBtn = document.createElement("button");
+    collapseBtn.innerHTML = "Collapse";
+    collapseBtn.addEventListener("click", (function(e) { this.setExpanded(false); }).bind(this));
+    ctrlDivInner.appendChild(collapseBtn);
+    
+    var moveUpBtn = document.createElement("button");
+    moveUpBtn.innerHTML = "Move Up";
+    moveUpBtn.addEventListener("click", (function(e) {
+        // insert this element before its previous sibling (if one exists)
+        var prev = this.rootDiv.previousSibling;
+        if (!!prev) {
+            var swap = pg.workspace.replaceChild(prev, this.rootDiv);
+            pg.workspace.insertBefore(swap, prev);
+        }
+    }).bind(this));
+    ctrlDivInner.appendChild(moveUpBtn);
+    
+    var moveDownBtn = document.createElement("button");
+    moveDownBtn.innerHTML = "Move Down";
+    moveDownBtn.addEventListener("click", (function(e) {
+        // insert this element's next sibling (if one exists) before it
+        var next = this.rootDiv.nextSibling;
+        if (!!next) {
+            var swap = pg.workspace.replaceChild(next, this.rootDiv);
+            pg.workspace.insertBefore(swap, next.nextSibling);
+        }
+    }).bind(this));
+    ctrlDivInner.appendChild(moveDownBtn);
     
     ctrlDiv.appendChild(ctrlDivInner);
     
     // show controls only for the unit under the mouse
-    this.rootDiv.addEventListener("mouseover", function() {
-        ctrlDiv.style.visibility = "visible";});
+    this.rootDiv.addEventListener("mouseover", (function() {
+        if (this.getExpanded())
+            ctrlDiv.style.visibility = "visible";
+        }).bind(this));
     this.rootDiv.addEventListener("mouseleave", function() {
         ctrlDiv.style.visibility = "collapse";});
     
-    this.editorDiv.appendChild(this.headDiv);
+    this.editorDiv.appendChild(headContainer);
     this.editorDiv.appendChild(this.bodyDiv);
+    this.editorDiv.appendChild(this.summaryDiv);
     this.rootDiv.appendChild(this.editorDiv);
     this.rootDiv.appendChild(ctrlDiv);
 };
 pg.TextUnit.prototype.getText = function() {
     return this.bodyDiv.innerHTML;
 };
-pg.TextUnit.prototype.getNotes = function() {
-    return this.headDiv.innerHTML;
-};
-pg.TextUnit.prototype.getStatus = function() {
-    return pg.Status.fromValue(this.rootDiv.getAttribute("data-status"));
-};
 pg.TextUnit.prototype.setText = function(t) {
     this.bodyDiv.innerHTML = t===undefined ? "" : t;
     pg.requireSave();
+};
+
+pg.TextUnit.prototype.getNotes = function() {
+    return this.headDiv.innerHTML;
 };
 pg.TextUnit.prototype.setNotes = function(n) {
     this.headDiv.innerHTML = n===undefined ? "" : n;
     pg.requireSave();
 };
+
+pg.TextUnit.prototype.getStatus = function() {
+    return pg.Status.fromValue(this.rootDiv.getAttribute("data-status"));
+};
 pg.TextUnit.prototype.setStatus = function(s) {
     this.rootDiv.setAttribute("data-status", (s===undefined ? pg.Status.BLANK : s.value));
     pg.requireSave();
 };
+
+pg.TextUnit.prototype.getExpanded = function() {
+    return (this.rootDiv.getAttribute("data-expanded") == "true");
+};
+pg.TextUnit.prototype.setExpanded = function(e) {
+    this.rootDiv.setAttribute("data-expanded", e ? "true" : "false");
+}
 // add a new text unit after the indicated one
 pg.TextUnit.prototype.addNew = function(at) {
     if ((at === undefined) || !at.rootDiv.nextSibling) { // the given unit is the last one or no unit is given
@@ -162,7 +229,11 @@ pg.TextUnit.prototype.addNew = function(at) {
     pg.requireSave();
 }
 pg.TextUnit.prototype.deleteCurrent = function() {
-    workspace.removeChild(this.rootDiv);
+    pg.workspace.removeChild(this.rootDiv);
+    // if there are none left, add a new one
+    if (!pg.workspace.firstChild) {
+        pg.addFirst();
+    }
     pg.requireSave();
 }
 
@@ -179,7 +250,14 @@ pg.addFirst = function() {
 //===============================================
 // Initialize
 // ==============================================
-var second = pg.addFirst();
-var first = pg.addFirst();
-second.setNotes("Second");
-first.setNotes("first");
+
+/*
+// permanent adder
+var adder = document.createElement("button");
+adder.addEventListener("click", function(){pg.addFirst()});
+adder.innerHTML = "Add a new ";
+document.getElementById("header").appendChild(adder);
+*/
+
+// a single blank unit to start with
+pg.addFirst();
