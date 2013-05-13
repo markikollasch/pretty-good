@@ -8,10 +8,14 @@
     </head>
     <body>
         <div id="header"> <!-- main menu content goes in here -->
-            <h2 id="title" contenteditable="true">Pretty Good</h2>
+            <h2 id="title" contenteditable="true" oninput="pg.requireSave();">Pretty Good v0.1</h2>&nbsp;
+            <h3 id="author-container">by <span id="author" contenteditable="true" oninput="pg.requireSave();">Mark Kollasch</span>&nbsp;</h3>
+            <span id="saving" data-saving="false"></span>
+            <button id="download" onclick="pg.download();">Download</button>
             <input id="search" type="search" placeholder="Filter by..."></input>
             <label for="search-notes"><input id="search-notes" type="checkbox" />Notes</label>
             <label for="search-text"><input id="search-text" type="checkbox" />Text</label>
+            <span id="word-count">???</span> <!-- TODO: implement word counting -->
         </div>
         <script type="text/javascript" src="pg.js"></script>
     </body>

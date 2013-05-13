@@ -8,18 +8,71 @@ var pg = pg || {};
 
 pg.workspace = document.createElement("div");
 pg.workspace.id = "workspace";
+pg.titleElement = document.getElementById("title");
+pg.authorElement = document.getElementById("author");
 document.body.appendChild(pg.workspace);
 
 pg.saving = false;
+pg.saveStatus = document.getElementById("saving");
 pg.requireSave = function(){
     if (!pg.saving) {
         pg.saving = true;
-        // TODO: write to web storage
+        pg.saveStatus.setAttribute("data-saving","true");
+        // write to web storage
+        //========================
+        localStorage.setItem("pg.title", pg.titleElement.innerHTML);
+        localStorage.setItem("pg.author", pg.authorElement.innerHTML);
+        var elements = pg.workspace.children;
+        var objs = [];
+        for (var i=0; i<elements.length; i++) {
+            var unit = elements[i].owningUnit;
+            objs.push({
+                Text: unit.getText(),
+                Notes: unit.getNotes(),
+                Status: unit.getStatus()
+            });
+        }
+        var asString = JSON.stringify(objs);
+        localStorage.setItem("pg.data", asString);
+        //========================
+        pg.saveStatus.setAttribute("data-saving","false");
         pg.saving = false;
     } else { // it did not save - try again later
         window.setTimeout(pg.requireSave, 100);
     }
+};
+
+pg.load = function(){
+    var title = localStorage.getItem("pg.title");
+    pg.titleElement.innerHTML = title ? title : "Pretty Good v0.1";
+    var author = localStorage.getItem("pg.author")
+    pg.authorElement.innerHTML = author ? author : "Mark Kollasch";
     
+    var rawdata = localStorage.getItem("pg.data");
+    if (rawdata != null){
+        var pgdata = JSON.parse(rawdata);
+        if (pgdata.length > 0) {
+            for (var i=0; i<pgdata.length; i++) {
+                pg.workspace.appendChild((new pg.TextUnit(pgdata[i].Text, pgdata[i].Notes, pgdata[i].Status)).rootDiv);
+            }
+        }
+        else { // initial boot - 
+            pg.addFirst();
+        }
+    }
+    else { // initial boot - 
+        pg.addFirst();
+    }
+};
+
+pg.download = function(){
+    alert("This does nothing yet.");
+};
+
+pg.addFirst = function() {
+    var unit = new pg.TextUnit();
+    pg.workspace.insertBefore (unit.rootDiv, pg.workspace.firstChild);
+    pg.requireSave();
 };
 
 // enumeration of valid text unit states
@@ -126,6 +179,7 @@ pg.TextUnit = function(t, n, s) {
         var statusBtn = document.createElement("button");
         statusBtn.innerHTML = "&nbsp;";
         statusBtn.className = "status-" + i;
+        statusBtn.title = pg.Status.fromValue(i).name
         ctrlDivInner.appendChild(statusBtn);
         statusBtns.push(statusBtn);
     }
@@ -143,6 +197,7 @@ pg.TextUnit = function(t, n, s) {
     
     var delBtn = document.createElement("button");
     delBtn.innerHTML = "Delete!";
+    // TODO: make this safer
     delBtn.addEventListener("click", (function(e) { this.deleteCurrent(); }).bind(this));
     ctrlDivInner.appendChild(delBtn);
     
@@ -282,15 +337,8 @@ pg.TextUnit.prototype.deleteCurrent = function() {
     includeText.addEventListener("change", execSearch);
 })();
 
+// TODO: word counter
+// make it a link that opens up a breakdown of exactly how many words are in what categories
 
-// adds a new text unit in the initial position
-// and returns it, for testing purposes
-pg.addFirst = function() {
-    var unit = new pg.TextUnit();
-    pg.workspace.insertBefore (unit.rootDiv, pg.workspace.firstChild);
-    pg.requireSave();
-    return unit;
-};
 
-// a single blank unit to start with
-pg.addFirst();
+pg.load();
