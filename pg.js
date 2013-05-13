@@ -79,6 +79,8 @@ pg.TextUnit = function(t, n, s) {
     this.rootDiv = document.createElement("table");
     this.rootDiv.className = "text-unit";
     this.setStatus(status);
+    // provide access to this abstraction from the DOM
+    this.rootDiv.owningUnit = this;
     
     this.editorDiv = document.createElement("tr");
     this.editorDiv.className = "unit-editor";
@@ -178,7 +180,6 @@ pg.TextUnit = function(t, n, s) {
     // show controls only for the unit under the mouse
     this.rootDiv.addEventListener("mouseover", (function() {
         if (this.getExpanded())
-            console.log("Trying to display controls...");
             ctrlDiv.style.display = "";
         }).bind(this));
     this.rootDiv.addEventListener("mouseout", function() {
@@ -236,29 +237,60 @@ pg.TextUnit.prototype.deleteCurrent = function() {
         pg.addFirst();
     }
     pg.requireSave();
-}
+};
+
+
+//===============================================
+// Initialize
+// ==============================================
+
+// searcher
+(function(){
+    var searcher = document.getElementById("search");
+    var includeNotes = document.getElementById("search-notes");
+    includeNotes.checked = true;
+    var includeText = document.getElementById("search-text");
+    includeText.checked = true;
+    
+    var execSearch = function(e) {
+        if (searcher.value) { // contract all that match, expand all that don't
+            var elements = pg.workspace.children;
+            for (var i=0; i<elements.length; i++) {
+                var unit = elements[i].owningUnit;
+                unit.setExpanded(false);
+                if (includeNotes.checked) {
+                    if (unit.headDiv.innerHTML.indexOf(searcher.value) != -1) {
+                        unit.setExpanded(true);
+                    }
+                }
+                if (includeText.checked) {
+                    if (unit.bodyDiv.innerHTML.indexOf(searcher.value) != -1) {
+                        unit.setExpanded(true);
+                    }
+                }
+            }
+        }
+        else {
+            var elements = pg.workspace.children;
+            for (var i=0; i< elements.length; i++) { // just expand them all
+                elements[i].owningUnit.setExpanded(true);
+            }
+        }
+    };
+    searcher.addEventListener("input", execSearch);
+    includeNotes.addEventListener("change", execSearch);
+    includeText.addEventListener("change", execSearch);
+})();
+
 
 // adds a new text unit in the initial position
-// even if none exist
 // and returns it, for testing purposes
 pg.addFirst = function() {
     var unit = new pg.TextUnit();
     pg.workspace.insertBefore (unit.rootDiv, pg.workspace.firstChild);
     pg.requireSave();
     return unit;
-}
-
-//===============================================
-// Initialize
-// ==============================================
-
-/*
-// permanent adder
-var adder = document.createElement("button");
-adder.addEventListener("click", function(){pg.addFirst()});
-adder.innerHTML = "Add a new ";
-document.getElementById("header").appendChild(adder);
-*/
+};
 
 // a single blank unit to start with
 pg.addFirst();
