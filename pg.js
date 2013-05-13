@@ -178,10 +178,11 @@ pg.TextUnit = function(t, n, s) {
     // show controls only for the unit under the mouse
     this.rootDiv.addEventListener("mouseover", (function() {
         if (this.getExpanded())
-            ctrlDiv.style.visibility = "visible";
+            console.log("Trying to display controls...");
+            ctrlDiv.style.display = "";
         }).bind(this));
-    this.rootDiv.addEventListener("mouseleave", function() {
-        ctrlDiv.style.visibility = "collapse";});
+    this.rootDiv.addEventListener("mouseout", function() {
+        ctrlDiv.style.display = "none";});
     
     this.editorDiv.appendChild(headContainer);
     this.editorDiv.appendChild(this.bodyDiv);
