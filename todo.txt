@@ -1,9 +1,12 @@
 Still need to:
 
-Implement basic behavior for Text Unit widget
-    (probably find a basic open-source WYSIWYG editor rather than rolling my own thing based on contenteditable)
-Dynamically create Text Unit widgets
+Search:
+    Filter based on contents of head or body
+    assign to data-found custom attribute
 Saving and loading:
     to/from Web Storage
     to/from JSON
     export to more usable text
+
+Optimize:
+    Probably do not need to duplicate all the data.
