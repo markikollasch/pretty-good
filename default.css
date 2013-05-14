@@ -112,7 +112,6 @@ button.status-4,
 }
 .text-unit[data-expanded="false"] .head-container {
     height: 1.3em;
-    width: 70%;
 }
 .text-unit[data-expanded="false"] .unit-head {
     overflow-y: hidden;
@@ -132,7 +131,7 @@ button.status-4,
 }
 
 .unit-summary {
-    width: 70%;
+    width: 5%;
     display: none;
     padding: 0;
     margin: 0;
@@ -156,6 +155,10 @@ button.status-4,
     font-family: monospace;
     background-color: #000000;
     color: #ffffff;
+    /* experimental alternative UI
+    position: fixed;
+    bottom: 0;
+    */
 }
 
 [contenteditable="true"]:active,

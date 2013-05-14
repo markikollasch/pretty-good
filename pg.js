@@ -35,6 +35,7 @@ pg.requireSave = function(){
             }
         }
         var asString = JSON.stringify(objs);
+        console.log("Saved:" + asString);
         localStorage.setItem("pg.data", asString);
         //========================
         pg.saveStatus.setAttribute("data-saving","false");
@@ -52,6 +53,7 @@ pg.load = function(){
     
     var rawdata = localStorage.getItem("pg.data");
     if (rawdata != null){
+        console.log("Loaded:" + rawdata);
         var pgdata = JSON.parse(rawdata);
         if (pgdata.length > 0) {
             for (var i=0; i<pgdata.length; i++) {
@@ -237,7 +239,7 @@ pg.TextUnit = function(t, n, s) {
     
     this.rootDiv = document.createElement("table");
     this.rootDiv.className = "text-unit";
-    this.setStatus(status);
+    this.alterStatus(status);
     // provide access to this abstraction from the DOM
     this.rootDiv.owningUnit = this;
     
@@ -251,17 +253,23 @@ pg.TextUnit = function(t, n, s) {
     this.headDiv.className = "unit-head";
     this.headDiv.contentEditable = true;
     headContainer.appendChild(this.headDiv);
-    this.setNotes(notes);
+    this.alterNotes(notes);
     this.headDiv.addEventListener("input", function(e) {
         pg.requireSave(); });
+    this.headDiv.addEventListener("focus", (function(e) {
+        pg.controls.attachTo(this);
+    }).bind(this));
     
     // body
     this.bodyDiv = document.createElement("td");
     this.bodyDiv.className = "unit-body";
     this.bodyDiv.contentEditable = true;
-    this.setText(text);
+    this.alterText(text);
     this.bodyDiv.addEventListener("input", function(e) {
         pg.requireSave(); });
+    this.bodyDiv.addEventListener("focus", (function(e) {
+        pg.controls.attachTo(this);
+    }).bind(this));
     
     // summary - only visible when not expanded
     this.summaryDiv = document.createElement("td");
@@ -286,24 +294,33 @@ pg.TextUnit = function(t, n, s) {
 pg.TextUnit.prototype.getText = function() {
     return this.bodyDiv.innerHTML;
 };
-pg.TextUnit.prototype.setText = function(t) {
+pg.TextUnit.prototype.alterText = function(t) {
     this.bodyDiv.innerHTML = t===undefined ? "" : t;
+};
+pg.TextUnit.prototype.setText = function(t) {
+    alterText(t);
     pg.requireSave();
 };
 
 pg.TextUnit.prototype.getNotes = function() {
     return this.headDiv.innerHTML;
 };
-pg.TextUnit.prototype.setNotes = function(n) {
+pg.TextUnit.prototype.alterNotes = function(n) {
     this.headDiv.innerHTML = n===undefined ? "" : n;
+};
+pg.TextUnit.prototype.setNotes = function(n) {
+    this.alterNotes(n);
     pg.requireSave();
 };
 
 pg.TextUnit.prototype.getStatus = function() {
     return pg.Status.fromValue(this.rootDiv.getAttribute("data-status"));
 };
-pg.TextUnit.prototype.setStatus = function(s) {
+pg.TextUnit.prototype.alterStatus = function(s) {
     this.rootDiv.setAttribute("data-status", (s===undefined ? pg.Status.BLANK : s.value));
+};
+pg.TextUnit.prototype.setStatus = function(s) {
+    alterStatus(s);
     pg.requireSave();
 };
 
