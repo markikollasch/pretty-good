@@ -14,8 +14,10 @@
             <a id="about" href="about.html">about</a>
             <span id="saving" data-saving="false"></span>
             <input id="uploader" type="file" accept="text/*" onchange="pg.readFile(this.files);">
-            <button id="importFile" onclick="pg.getFile(this);">Import</button>
-            <button id="exportFile" onclick="pg.exportFile();">Export</button>
+            <button id="exportFile" onclick="pg.exportFile();" title="Create and download a backup project file.">Backup</button>
+            <button id="importFile" onclick="pg.getFile(this);" title="Restore a downloaded backup file.">Restore</button>
+            <button id="text-export" onclick="pg.exportText();" title="Export all text (but not notes) to a plain text file.">Export</button>
+            <button id="purge" onclick="pg.purge();" title="Destroy this project.">Obliterate</button>
             <br />
             <input id="search" type="search" placeholder="Filter by..."></input>
             <label for="search-notes"><input id="search-notes" type="checkbox" />Notes</label>

@@ -9,7 +9,7 @@ In the left-hand column, place notes about what you hope to accomplish in that s
 
 Pretty Good will automatically save your progress on your computer, using the Local Storage API of modern browsers. This is completely secure: no data is sent to the server it is hosted upon. However, it is both possible and encouraged to download its source code and use a local copy of Pretty Good, or host a version on your own server.
 
-To manage your data manually, simply use the "Export" button to receive a file containing the current data, and the "Import" button to load the data from any such file, replacing the current data.
+To manage your data manually, simply use the "Backup" button to receive a file containing the current data, and the "Restore" button to load the data from any such file, replacing the current data. Once you're finished, the "Export" button will produce a plain text file which you can then markup in a richer editor of your choosing.
 
 ## About Pretty Good
 The author P. G. Wodehouse was said to have hung each page of an unfinished manuscript on the wall, with their relative heights indicating his perception of their quality, and only when they were all uniformly high did he consider the story fit for publication. This inspired the digital process that Pretty Good uses to visualize the completeness of each logical unit of text.

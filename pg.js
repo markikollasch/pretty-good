@@ -6,7 +6,12 @@
 // namespace pg
 var pg = pg || {};
 
-pg.version = 0.1;
+// versioning schema as of version 0.1.1:
+// each version is a larger number than the last one;
+// micro versions increase for small features and bugfixes
+// minor versions increase when some set of related features is "done";
+// major versions not yet defined
+pg.version = "0.1.1";
 
 pg.workspace = document.createElement("div");
 pg.workspace.id = "workspace";
@@ -48,7 +53,7 @@ pg.obliterateCurrentDataFromJSON = function(raw){
         obliterate = true;
     }
     catch (se) {
-        if (window.confirm("Data parse error. Proceed?")) {
+        if (window.confirm("Data parse error. Destroy everything?")) {
             obliterate = true;
             obj = {
             title: "Pretty Good v" + pg.version,
@@ -134,6 +139,42 @@ pg.load = function(){
     }
     
     pg.updateWordCount();
+};
+
+// export all text (but not notes) to a text file
+pg.exportText = function(){
+    console.log("exporting");
+    var allText = "";
+    var elements = pg.workspace.children;
+    for (var i=0; i<elements.length; i++) {
+        if (elements[i] != pg.controls.div) {
+            var unit = elements[i].owningUnit;
+            var text = unit.getText();
+            // replace all br and p tags and &nbsp;s
+            text = text.replace(/\<br\\?>/gi, "\n").replace(/\<p\\?>/gi, "\n\n").replace(/[&]nbsp[;]/gi," ");
+            allText += "\n\n" + text;
+        }
+    }
+    // build a data URI containing the text
+    var uri = "data:application/x-download;charset=utf-8," + encodeURIComponent(allText);
+    // and download it
+    window.location.assign(uri);
+};
+
+// destroy everything
+pg.purge = function(){
+    if (window.confirm("Erase all data?")) {
+        
+        pg.titleElement.innerHTML = "Pretty Good v" + pg.version;
+        pg.authorElement.innerHTML = "Mark Kollasch";
+        pg.controls.remove();
+        while (pg.workspace.hasChildNodes()) {
+            pg.workspace.removeChild(pg.workspace.lastChild);
+        }
+        pg.controls.attachTo(pg.addFirst());
+    }
+    pg.updateWordCount();
+    pg.requireSave();
 };
 
 pg.addFirst = function() {
