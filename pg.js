@@ -25,12 +25,14 @@ pg.requireSave = function(){
         var elements = pg.workspace.children;
         var objs = [];
         for (var i=0; i<elements.length; i++) {
-            var unit = elements[i].owningUnit;
-            objs.push({
-                Text: unit.getText(),
-                Notes: unit.getNotes(),
-                Status: unit.getStatus()
-            });
+            if (elements[i] != pg.controls.div) {
+                var unit = elements[i].owningUnit;
+                objs.push({
+                    Text: unit.getText(),
+                    Notes: unit.getNotes(),
+                    Status: unit.getStatus()
+                });
+            }
         }
         var asString = JSON.stringify(objs);
         localStorage.setItem("pg.data", asString);
@@ -73,6 +75,7 @@ pg.addFirst = function() {
     var unit = new pg.TextUnit();
     pg.workspace.insertBefore (unit.rootDiv, pg.workspace.firstChild);
     pg.requireSave();
+    return unit;
 };
 
 // enumeration of valid text unit states
@@ -112,6 +115,112 @@ pg.Status.fromValue = function(v) {
 };
 if (Object.freeze) { Object.freeze(pg.Status); }
 
+// controls for manipulating a TextUnit
+pg.controls = new (function(){
+    this.currentUnit = null;
+    this.div = document.createElement("div");
+    this.div.className = "unit-controls";
+    
+    // controls
+    
+    var statusBtns = [];
+    for (var i=0; i<5; i++) {
+        var statusBtn = document.createElement("button");
+        statusBtn.innerHTML = "&nbsp;";
+        statusBtn.className = "status-" + i;
+        statusBtn.title = pg.Status.fromValue(i).name
+        this.div.appendChild(statusBtn);
+        statusBtns.push(statusBtn);
+    }
+    statusBtns[0].addEventListener("click", (function(e) { this.currentUnit.setStatus(pg.Status.BLANK); }).bind(this));
+    statusBtns[1].addEventListener("click", (function(e) { this.currentUnit.setStatus(pg.Status.UNFINISHED); }).bind(this));
+    statusBtns[2].addEventListener("click", (function(e) { this.currentUnit.setStatus(pg.Status.BAD); }).bind(this));
+    statusBtns[3].addEventListener("click", (function(e) { this.currentUnit.setStatus(pg.Status.OK); }).bind(this));
+    statusBtns[4].addEventListener("click", (function(e) { this.currentUnit.setStatus(pg.Status.GREAT); }).bind(this));
+    
+    var addBtn = document.createElement("button");
+    addBtn.innerHTML = "Add new...";
+    addBtn.addEventListener("click", (function(e) {
+        if (!!this.currentUnit) {
+            this.currentUnit.addNew(this.currentUnit);
+        }
+        else {
+            this.attachTo(pg.addFirst());
+        }
+    }).bind(this));
+    this.div.appendChild(addBtn);
+    
+    var delBtn = document.createElement("button");
+    delBtn.innerHTML = "Delete!";
+    // TODO: make this safer
+    delBtn.addEventListener("click", (function(e) {
+        if (!!this.currentUnit) {
+            this.currentUnit.deleteCurrent();
+            // make sure the controls attach properly too
+            if (!!this.div.previousSibling) {
+                this.currentUnit = this.div.previousSibling.owningUnit;
+            }
+            else {
+                this.currentUnit = null;
+            }
+        }
+    }).bind(this));
+    this.div.appendChild(delBtn);
+    
+    var collapseBtn = document.createElement("button");
+    collapseBtn.innerHTML = "Collapse";
+    collapseBtn.addEventListener("click", (function(e) { this.currentUnit.setExpanded(false); }).bind(this));
+    this.div.appendChild(collapseBtn);
+    
+    var moveUpBtn = document.createElement("button");
+    moveUpBtn.innerHTML = "Move Up";
+    moveUpBtn.addEventListener("click", (function(e) {
+        // insert this element before its previous sibling (if one exists)
+        var prev = this.currentUnit.rootDiv.previousSibling;
+        if (!!prev) {
+            var swap = pg.workspace.replaceChild(prev, this.currentUnit.rootDiv);
+            pg.workspace.insertBefore(swap, prev);
+            // make sure the controls attach properly too
+            this.currentUnit = this.div.previousSibling.owningUnit;
+        }
+    }).bind(this));
+    this.div.appendChild(moveUpBtn);
+    
+    var moveDownBtn = document.createElement("button");
+    moveDownBtn.innerHTML = "Move Down";
+    moveDownBtn.addEventListener("click", (function(e) {
+        // insert this element's next sibling (if one exists) before it
+        var next = this.currentUnit.rootDiv.nextSibling.nextSibling; // the next sibling is the controls, so we want two
+        if (!!next) {
+            var swap = pg.workspace.replaceChild(next, this.currentUnit.rootDiv);
+            pg.workspace.insertBefore(swap, next.nextSibling);
+            // make sure the controls attach properly too
+            this.currentUnit = this.div.previousSibling.owningUnit;
+        }
+    }).bind(this));
+    this.div.appendChild(moveDownBtn);
+    
+    // move the controls to just below the specified unit
+    // "null" for beginning of list
+    this.attachTo = function(unit) {
+        if (!!unit) {
+            var before = unit.rootDiv.nextSibling;
+            pg.workspace.insertBefore(this.div, before);
+            this.currentUnit = unit;
+        }
+        else {
+            pg.workspace.appendChild(this.div);
+        }
+    };
+    
+    // remove the controls so the workspace contains only units
+    this.remove = function() {
+        if (!!this.currentUnit && this.div.parentNode == pg.workspace) {
+            pg.workspace.removeChild(this.div);
+        }
+    };
+})();
+
 // visually represents and manipulates a text unit
 pg.TextUnit = function(t, n, s) {
     /*  <table class="text-unit" data-status="Whatever">
@@ -120,10 +229,7 @@ pg.TextUnit = function(t, n, s) {
      *          <td class="unit-body"></td>
      *          <td class="unit-summary"></td>
      *      </tr>
-     *      <tfoot class="unit-controls" colspan="2">
-     *          <td class="unit-controls-inner" colspan="2"></td>
-     *      </tfoot>
-     *  </div>
+     *  </table>
      */
     var text = t===undefined ? "" : t;
     var notes = n===undefined ? "" : n;
@@ -167,84 +273,15 @@ pg.TextUnit = function(t, n, s) {
     expandBtn.addEventListener("click", (function(e) { this.setExpanded(true); }).bind(this));
     this.summaryDiv.appendChild(expandBtn);
     
-    // controls
-    var ctrlDiv = document.createElement("tfoot");
-    ctrlDiv.className = "unit-controls";
-    var ctrlDivInner = document.createElement("td");
-    ctrlDivInner.className = "unit-controls-inner";
-    ctrlDivInner.colSpan = "3";
-    
-    var statusBtns = [];
-    for (var i=0; i<5; i++) {
-        var statusBtn = document.createElement("button");
-        statusBtn.innerHTML = "&nbsp;";
-        statusBtn.className = "status-" + i;
-        statusBtn.title = pg.Status.fromValue(i).name
-        ctrlDivInner.appendChild(statusBtn);
-        statusBtns.push(statusBtn);
-    }
-    statusBtns[0].addEventListener("click", (function(e) { this.setStatus(pg.Status.BLANK); }).bind(this));
-    statusBtns[1].addEventListener("click", (function(e) { this.setStatus(pg.Status.UNFINISHED); }).bind(this));
-    statusBtns[2].addEventListener("click", (function(e) { this.setStatus(pg.Status.BAD); }).bind(this));
-    statusBtns[3].addEventListener("click", (function(e) { this.setStatus(pg.Status.OK); }).bind(this));
-    statusBtns[4].addEventListener("click", (function(e) { this.setStatus(pg.Status.GREAT); }).bind(this));
-    
-    
-    var addBtn = document.createElement("button");
-    addBtn.innerHTML = "Add new...";
-    addBtn.addEventListener("click", (function(e) { this.addNew(this); }).bind(this));
-    ctrlDivInner.appendChild(addBtn);
-    
-    var delBtn = document.createElement("button");
-    delBtn.innerHTML = "Delete!";
-    // TODO: make this safer
-    delBtn.addEventListener("click", (function(e) { this.deleteCurrent(); }).bind(this));
-    ctrlDivInner.appendChild(delBtn);
-    
-    var collapseBtn = document.createElement("button");
-    collapseBtn.innerHTML = "Collapse";
-    collapseBtn.addEventListener("click", (function(e) { this.setExpanded(false); }).bind(this));
-    ctrlDivInner.appendChild(collapseBtn);
-    
-    var moveUpBtn = document.createElement("button");
-    moveUpBtn.innerHTML = "Move Up";
-    moveUpBtn.addEventListener("click", (function(e) {
-        // insert this element before its previous sibling (if one exists)
-        var prev = this.rootDiv.previousSibling;
-        if (!!prev) {
-            var swap = pg.workspace.replaceChild(prev, this.rootDiv);
-            pg.workspace.insertBefore(swap, prev);
-        }
-    }).bind(this));
-    ctrlDivInner.appendChild(moveUpBtn);
-    
-    var moveDownBtn = document.createElement("button");
-    moveDownBtn.innerHTML = "Move Down";
-    moveDownBtn.addEventListener("click", (function(e) {
-        // insert this element's next sibling (if one exists) before it
-        var next = this.rootDiv.nextSibling;
-        if (!!next) {
-            var swap = pg.workspace.replaceChild(next, this.rootDiv);
-            pg.workspace.insertBefore(swap, next.nextSibling);
-        }
-    }).bind(this));
-    ctrlDivInner.appendChild(moveDownBtn);
-    
-    ctrlDiv.appendChild(ctrlDivInner);
-    
     // show controls only for the unit under the mouse
     this.rootDiv.addEventListener("mouseover", (function() {
-        if (this.getExpanded())
-            ctrlDiv.style.display = "";
-        }).bind(this));
-    this.rootDiv.addEventListener("mouseout", function() {
-        ctrlDiv.style.display = "none";});
+        pg.controls.attachTo(this);
+    }).bind(this));
     
     this.editorDiv.appendChild(headContainer);
     this.editorDiv.appendChild(this.bodyDiv);
     this.editorDiv.appendChild(this.summaryDiv);
     this.rootDiv.appendChild(this.editorDiv);
-    this.rootDiv.appendChild(ctrlDiv);
 };
 pg.TextUnit.prototype.getText = function() {
     return this.bodyDiv.innerHTML;
