@@ -47,7 +47,7 @@ pg.obliterateCurrentDataFromJSON = function(raw){
         obj = JSON.parse(raw);
         obliterate = true;
     }
-    catch (se if se instanceof SyntaxError) {
+    catch (se) {
         if (window.confirm("Data parse error. Proceed?")) {
             obliterate = true;
             obj = {
@@ -190,7 +190,7 @@ pg.wordCount = function() {
     var count = function(str) {
         // a slightly magical regular expression
         // that strips all the tags and &nbsp;s out of the original
-        var fstr = str.replace(/(<([^>]+)>|[&]nbsp[;])/ig,"");
+        var fstr = str.replace(/(<([^>]+)>|[&]nbsp[;])/ig," ");
         // a slightly magical regular expression
         // that matches on every sequence of non-whitespace characters
         var arr = fstr.match(/\S+\s*/g);
