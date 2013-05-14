@@ -44,6 +44,11 @@ button {
     margin-right: 1px;
 }
 
+/* make the file uploader invisible, 'cause it's ugly */
+input[type="file"] {
+    display: none;
+}
+
 .workspace {
     background-color: white;
 }

@@ -6,12 +6,101 @@
 // namespace pg
 var pg = pg || {};
 
+pg.version = 0.1;
+
 pg.workspace = document.createElement("div");
 pg.workspace.id = "workspace";
 pg.titleElement = document.getElementById("title");
 pg.authorElement = document.getElementById("author");
 document.body.appendChild(pg.workspace);
 
+// returns a string containing all the data on the page
+// in JSON format
+pg.currentDataToJSON = function() {
+    var elements = pg.workspace.children;
+    var obj = {
+        title: pg.titleElement.innerHTML,
+        author: pg.authorElement.innerHTML,
+        objs: []
+    };
+    for (var i=0; i<elements.length; i++) {
+        if (elements[i] != pg.controls.div) {
+            var unit = elements[i].owningUnit;
+            obj.objs.push({
+                Text: unit.getText(),
+                Notes: unit.getNotes(),
+                Status: unit.getStatus()
+            });
+        }
+    }
+    return JSON.stringify(obj);
+};
+
+// use the given JSON string
+// to obliterate all data on the page
+// and replace it with the given data
+// (assume the given data is valid)
+pg.obliterateCurrentDataFromJSON = function(raw){
+    var obliterate = false;
+    var obj;
+    try {
+        obj = JSON.parse(raw);
+        obliterate = true;
+    }
+    catch (se if se instanceof SyntaxError) {
+        if (window.confirm("Data parse error. Proceed?")) {
+            obliterate = true;
+            obj = {
+            title: "Pretty Good v" + pg.version,
+            author: "Mark Kollasch",
+            objs: []};
+        }
+    }
+    finally {
+        if (obliterate) {
+            pg.titleElement.innerHTML = obj.title;
+            pg.authorElement.innerHTML = obj.author;
+            pg.controls.remove();
+            while (pg.workspace.hasChildNodes()) {
+                pg.workspace.removeChild(pg.workspace.lastChild);
+            }
+            // parse all the units
+            if (obj.objs.length > 0) {
+                for (var i=0; i<obj.objs.length; i++) {
+                    pg.workspace.appendChild((new pg.TextUnit(obj.objs[i].Text, obj.objs[i].Notes, obj.objs[i].Status)).rootDiv);
+                }
+            }
+            else { // saved 0 units
+                pg.addFirst();
+            }
+            pg.controls.attachTo(pg.workspace.firstChild.owningUnit);
+        }
+    }
+};
+
+/////file handling
+pg.readFile = function(fs) {
+    var file = fs[0];
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var contents = e.target.result;
+        pg.obliterateCurrentDataFromJSON(contents);
+    };
+    reader.readAsText(file);
+};
+
+pg.getFile = function(e) {
+    document.getElementById("uploader").click();
+};
+
+pg.exportFile = function(){
+    // build a data URI containing the JSON for all the stuff on the page
+    var uri = "data:application/x-download;charset=utf-8," + encodeURIComponent(pg.currentDataToJSON());
+    // and download it
+    window.location.assign(uri);
+};
+
+//// local save/load
 pg.saving = false;
 pg.saveStatus = document.getElementById("saving");
 pg.requireSave = function(){
@@ -20,23 +109,7 @@ pg.requireSave = function(){
         pg.saveStatus.setAttribute("data-saving","true");
         // write to web storage
         //========================
-        localStorage.setItem("pg.title", pg.titleElement.innerHTML);
-        localStorage.setItem("pg.author", pg.authorElement.innerHTML);
-        var elements = pg.workspace.children;
-        var objs = [];
-        for (var i=0; i<elements.length; i++) {
-            if (elements[i] != pg.controls.div) {
-                var unit = elements[i].owningUnit;
-                objs.push({
-                    Text: unit.getText(),
-                    Notes: unit.getNotes(),
-                    Status: unit.getStatus()
-                });
-            }
-        }
-        var asString = JSON.stringify(objs);
-        console.log("Saved:" + asString);
-        localStorage.setItem("pg.data", asString);
+        localStorage.setItem("pg.data", pg.currentDataToJSON());
         //========================
         pg.saveStatus.setAttribute("data-saving","false");
         pg.saving = false;
@@ -47,30 +120,17 @@ pg.requireSave = function(){
 
 pg.load = function(){
     var title = localStorage.getItem("pg.title");
-    pg.titleElement.innerHTML = title ? title : "Pretty Good v0.1";
+    pg.titleElement.innerHTML = title ? title : "Pretty Good v" + pg.version;
     var author = localStorage.getItem("pg.author")
     pg.authorElement.innerHTML = author ? author : "Mark Kollasch";
     
     var rawdata = localStorage.getItem("pg.data");
     if (rawdata != null){
-        console.log("Loaded:" + rawdata);
-        var pgdata = JSON.parse(rawdata);
-        if (pgdata.length > 0) {
-            for (var i=0; i<pgdata.length; i++) {
-                pg.workspace.appendChild((new pg.TextUnit(pgdata[i].Text, pgdata[i].Notes, pgdata[i].Status)).rootDiv);
-            }
-        }
-        else { // initial boot - 
-            pg.addFirst();
-        }
+        pg.obliterateCurrentDataFromJSON(rawdata);
     }
     else { // initial boot - 
         pg.addFirst();
     }
-};
-
-pg.download = function(){
-    alert("This does nothing yet.");
 };
 
 pg.addFirst = function() {

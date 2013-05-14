@@ -8,12 +8,14 @@
     </head>
     <body>
         <div id="header"> <!-- main menu content goes in here -->
-            <h2 id="title" contenteditable="true" oninput="pg.requireSave();">Pretty Good v0.1</h2>&nbsp;
+            <h2 id="title" contenteditable="true" oninput="pg.requireSave();">Pretty Good</h2>&nbsp;
             <h3 id="author-container">by <span id="author" contenteditable="true" oninput="pg.requireSave();">Mark Kollasch</span>&nbsp;</h3>
             <a id="source" href="https://github.com/markikollasch/pretty-good">source code</a>
             <a id="about" href="about.html">about</a>
             <span id="saving" data-saving="false"></span>
-            <button id="download" onclick="pg.download();">Download</button>
+            <input id="uploader" type="file" accept="text/*" onchange="pg.readFile(this.files);">
+            <button id="importFile" onclick="pg.getFile(this);">Import</button>
+            <button id="exportFile" onclick="pg.exportFile();">Export</button>
             <br />
             <input id="search" type="search" placeholder="Filter by..."></input>
             <label for="search-notes"><input id="search-notes" type="checkbox" />Notes</label>
