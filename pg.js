@@ -438,7 +438,7 @@ pg.TextUnit.prototype.alterText = function(t) {
     this.bodyDiv.innerHTML = t===undefined ? "" : t;
 };
 pg.TextUnit.prototype.setText = function(t) {
-    alterText(t);
+    this.alterText(t);
     pg.requireSave();
 };
 
@@ -460,7 +460,7 @@ pg.TextUnit.prototype.alterStatus = function(s) {
     this.rootDiv.setAttribute("data-status", (s===undefined ? pg.Status.BLANK : s.value));
 };
 pg.TextUnit.prototype.setStatus = function(s) {
-    alterStatus(s);
+    this.alterStatus(s);
     pg.requireSave();
 };
 
