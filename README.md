@@ -15,4 +15,4 @@ To manage your data manually, simply use the "Export" button to receive a file c
 The author P. G. Wodehouse was said to have hung each page of an unfinished manuscript on the wall, with their relative heights indicating his perception of their quality, and only when they were all uniformly high did he consider the story fit for publication. This inspired the digital process that Pretty Good uses to visualize the completeness of each logical unit of text.
 
 ## Coming Soon
-Despite its title, Pretty Good is, by the standards of its own author, neither pretty nor good, at least for the time being. Many essential features, including word count, keyboard shortcuts, and attractive, modern visuals, have yet to be implemented. We apologize for the inconvenience.
+Despite its title, Pretty Good is, by the standards of its own author, neither pretty nor good, at least for the time being. Many essential features, including keyboard shortcuts and attractive, modern visuals, have yet to be implemented. We apologize for the inconvenience.

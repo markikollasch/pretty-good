@@ -75,6 +75,7 @@ pg.obliterateCurrentDataFromJSON = function(raw){
             }
             pg.controls.attachTo(pg.workspace.firstChild.owningUnit);
         }
+        pg.updateWordCount();
     }
 };
 
@@ -131,6 +132,8 @@ pg.load = function(){
     else { // initial boot - 
         pg.addFirst();
     }
+    
+    pg.updateWordCount();
 };
 
 pg.addFirst = function() {
@@ -177,6 +180,40 @@ pg.Status.fromValue = function(v) {
 };
 if (Object.freeze) { Object.freeze(pg.Status); }
 
+// count all the words (defined as everything separated by any amount of whitespace)
+// returns { text: #, notes : # }
+pg.wordCount = function() {
+    var o = { text: 0, notes: 0 };
+    
+    // splits a string on any amount of whitespace
+    // and counts the number of splits
+    var count = function(str) {
+        // a slightly magical regular expression
+        // that strips all the tags and &nbsp;s out of the original
+        var fstr = str.replace(/(<([^>]+)>|[&]nbsp[;])/ig,"");
+        // a slightly magical regular expression
+        // that matches on every sequence of non-whitespace characters
+        var arr = fstr.match(/\S+\s*/g);
+        return !!arr ? arr.length: 0;
+    };
+    
+    var elements = pg.workspace.children;
+    
+    for (var i=0; i<elements.length; i++) {
+        if (elements[i] != pg.controls.div) {
+            var unit = elements[i].owningUnit;
+            o.text += count(unit.getText());
+            o.notes += count(unit.getNotes());
+        }
+    }
+    return o;
+};
+pg.updateWordCount = function(){
+    var o = pg.wordCount();
+    document.getElementById("word-count").innerHTML = o.text.toString() + " (+ " + o.notes.toString() + ")";
+};
+
+//=================== UI =============
 // controls for manipulating a TextUnit
 pg.controls = new (function(){
     this.currentUnit = null;
@@ -315,6 +352,7 @@ pg.TextUnit = function(t, n, s) {
     headContainer.appendChild(this.headDiv);
     this.alterNotes(notes);
     this.headDiv.addEventListener("input", function(e) {
+        pg.updateWordCount();
         pg.requireSave(); });
     this.headDiv.addEventListener("focus", (function(e) {
         pg.controls.attachTo(this);
@@ -326,6 +364,7 @@ pg.TextUnit = function(t, n, s) {
     this.bodyDiv.contentEditable = true;
     this.alterText(text);
     this.bodyDiv.addEventListener("input", function(e) {
+        pg.updateWordCount();
         pg.requireSave(); });
     this.bodyDiv.addEventListener("focus", (function(e) {
         pg.controls.attachTo(this);
@@ -405,6 +444,7 @@ pg.TextUnit.prototype.deleteCurrent = function() {
     if (!pg.workspace.firstChild) {
         pg.addFirst();
     }
+    pg.updateWordCount();
     pg.requireSave();
 };
 
@@ -451,8 +491,8 @@ pg.TextUnit.prototype.deleteCurrent = function() {
     includeText.addEventListener("change", execSearch);
 })();
 
-// TODO: word counter
-// make it a link that opens up a breakdown of exactly how many words are in what categories
-
+//=================
+// INITIALIZE
+//================
 
 pg.load();

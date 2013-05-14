@@ -33,7 +33,7 @@ body {
     margin-left: 1em;
 }
 #word-count:before {
-    content: "Word count: "
+    content: "Word count: ~"
 }
 
 button {
