@@ -50,7 +50,7 @@ input[type="file"] {
 }
 
 #workspace {
-    margin-top: 100px;
+    margin-top: 80px;
 }
 
 .text-unit {
@@ -66,32 +66,27 @@ input[type="file"] {
 }
 button.status-0,
 .text-unit[data-status="0"] .unit-head,
-.text-unit[data-status="0"] .head-container,
-.text-unit[data-status="0"] .unit-summary {
+.text-unit[data-status="0"] .head-container {
     background-color: #ffffff;
 }
 button.status-1,
 .text-unit[data-status="1"] .unit-head,
-.text-unit[data-status="1"] .head-container,
-.text-unit[data-status="1"] .unit-summary {
+.text-unit[data-status="1"] .head-container {
     background-color: #cccccc;
 }
 button.status-2,
 .text-unit[data-status="2"] .unit-head,
-.text-unit[data-status="2"] .head-container,
-.text-unit[data-status="2"] .unit-summary {
+.text-unit[data-status="2"] .head-container {
     background-color: #ffcccc;
 }
 button.status-3,
 .text-unit[data-status="3"] .unit-head,
-.text-unit[data-status="3"] .head-container,
-.text-unit[data-status="3"] .unit-summary {
+.text-unit[data-status="3"] .head-container {
     background-color: #ffffcc;
 }
 button.status-4,
 .text-unit[data-status="4"] .unit-head,
-.text-unit[data-status="4"] .head-container,
-.text-unit[data-status="4"] .unit-summary {
+.text-unit[data-status="4"] .head-container {
     background-color: #ccffcc;
 }
 
@@ -137,23 +132,6 @@ button.status-4,
 .text-unit[data-expanded="false"] .unit-body {
     display: none;
     height: 0;
-}
-
-.unit-summary {
-    width: 5%;
-    display: none;
-    padding: 0;
-    margin: 0;
-}
-.unit-summary > button {
-    margin: 0;
-}
-.text-unit[data-expanded="true"] .unit-summary {
-    display: none;
-}
-.text-unit[data-expanded="false"] .unit-summary {
-    display: table-cell;
-    width: 30%;
 }
 
 .unit-controls {

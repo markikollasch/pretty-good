@@ -307,25 +307,26 @@ pg.controls = new (function(){
     
     var delBtn = document.createElement("button");
     delBtn.innerHTML = "Delete!";
-    // TODO: make this safer
-    delBtn.addEventListener("click", (function(e) {
+    this.deleteCurrent = function() {
         if (!!this.currentUnit && window.confirm("This will delete the current unit. Proceed?")) {
+            var next = this.currentUnit.rootDiv.nextSibling ? this.currentUnit.rootDiv.nextSibling.owningUnit : this.currentUnit.rootDiv.previousSibling ? this.currentUnit.rootDiv.previousSibling.owningUnit : null;;
             this.currentUnit.deleteCurrent();
             // make sure the controls attach properly too
-            if (!!this.div.previousSibling) {
-                this.attachTo(this.div.previousSibling.owningUnit);
-            }
-            else {
-                this.attachTo(null);
-            }
+            this.attachTo(next);
         }
+    };
+    delBtn.addEventListener("click", (function(e) {
+        this.deleteCurrent();
     }).bind(this));
     this.div.appendChild(delBtn);
     
-    var collapseBtn = document.createElement("button");
-    collapseBtn.innerHTML = "Collapse";
-    collapseBtn.addEventListener("click", (function(e) { this.currentUnit.setExpanded(false); }).bind(this));
-    this.div.appendChild(collapseBtn);
+    this.collapseBtn = document.createElement("button");
+    this.collapseBtn.innerHTML ="Collapse";
+    this.collapseBtn.addEventListener("click", (function(e) {
+        this.currentUnit.setExpanded(!this.currentUnit.getExpanded());
+        this.collapseBtn.innerHTML = (this.currentUnit.getExpanded()) ? "Collapse" : "Expand";
+    }).bind(this));
+    this.div.appendChild(this.collapseBtn);
     
     var moveUpBtn = document.createElement("button");
     moveUpBtn.innerHTML = "Move Up";
@@ -360,6 +361,8 @@ pg.controls = new (function(){
         }
         this.currentUnit = unit;
         this.currentUnit.setSelected(true);
+        
+        this.collapseBtn.innerHTML = (this.currentUnit.getExpanded()) ? "Collapse" : "Expand";
     };
     
     // insert it
@@ -372,7 +375,6 @@ pg.TextUnit = function(t, n, s) {
      *      <tr class="unit-editor">
      *          <td class="head-container"><div class="unit-head"></div></td>
      *          <td class="unit-body"></td>
-     *          <td class="unit-summary"></td>
      *      </tr>
      *  </table>
      */
@@ -397,11 +399,77 @@ pg.TextUnit = function(t, n, s) {
     this.headDiv.contentEditable = true;
     headContainer.appendChild(this.headDiv);
     this.alterNotes(notes);
+    // Require saving after every change to the content
     this.headDiv.addEventListener("input", function(e) {
         pg.updateWordCount();
         pg.requireSave(); });
+    // Ensure the controls point to the active unit
     this.headDiv.addEventListener("focus", (function(e) {
         pg.controls.attachTo(this);
+    }).bind(this));
+    // Keyboard shortcuts:
+    this.headDiv.addEventListener("keydown", (function(e) {
+        /*  Ctrl+Up: move focus to the notes above, if it exists
+            Ctrl+Down: move focus to the notes below, if it exists
+            Ctrl+Right: expand if collapsed, and move focus to text
+            Ctrl+Left: nothing
+            Ctrl+Enter: insert new unit and move focus to notes below
+            Ctrl+Delete: delete the current unit
+            ctrl+1 through 5: colorize current
+        */
+        if (e.ctrlKey) {
+            switch(e.keyCode) {
+                case 37: // left - collapse (if expanded)
+                    this.setExpanded(false);
+                    e.preventDefault();
+                    break;
+                case 38: // up
+                    if (this.rootDiv.previousSibling)
+                        this.rootDiv.previousSibling.owningUnit.headDiv.focus();
+                        e.preventDefault();
+                    break;
+                case 39: // right
+                    this.setExpanded(true);
+                    this.bodyDiv.focus();
+                    e.preventDefault();
+                    break;
+                case 40: // down
+                    if (this.rootDiv.nextSibling)
+                        this.rootDiv.nextSibling.owningUnit.headDiv.focus();
+                        e.preventDefault();
+                    break;
+                case 13: // enter                    
+                    var neo = this.addNew(this);
+                    neo.headDiv.focus();
+                    e.preventDefault(); // don't add a new line break to it
+                    break;
+                case 46: // delete
+                    pg.controls.deleteCurrent();
+                    pg.controls.currentUnit.headDiv.focus();
+                    e.preventDefault();
+                    break;
+                case 49: // 1
+                    this.setStatus(pg.Status.BLANK);
+                    e.preventDefault();
+                    break;
+                case 50: // 2
+                    this.setStatus(pg.Status.UNFINISHED);
+                    e.preventDefault();
+                    break;
+                case 51: // 3
+                    this.setStatus(pg.Status.BAD);
+                    e.preventDefault();
+                    break;
+                case 52: // 4
+                    this.setStatus(pg.Status.OK);
+                    e.preventDefault();
+                    break;
+                case 53: // 5
+                    this.setStatus(pg.Status.GREAT);
+                    e.preventDefault();
+                    break;
+            }
+        }
     }).bind(this));
     
     // body
@@ -409,26 +477,78 @@ pg.TextUnit = function(t, n, s) {
     this.bodyDiv.className = "unit-body";
     this.bodyDiv.contentEditable = true;
     this.alterText(text);
+    // Require saving after every change to the content
     this.bodyDiv.addEventListener("input", function(e) {
         pg.updateWordCount();
         pg.requireSave(); });
+    // Ensure the controls point to the active unit
     this.bodyDiv.addEventListener("focus", (function(e) {
         pg.controls.attachTo(this);
     }).bind(this));
+    // Keyboard shortcuts:
+    this.bodyDiv.addEventListener("keydown", (function(e) {
+        /*  Ctrl+Up: move focus to the text above, if it exists
+            Ctrl+Down: move focus to the text below, if it exists
+            Ctrl+Right: nothing
+            Ctrl+Left: move to notes
+            Ctrl+Enter: insert new unit and move focus to text below
+            Ctrl+Delete: delete the current unit
+            ctrl+1 through 5: colorize current
+        */
+        if (e.ctrlKey) {
+            switch(e.keyCode) {
+                case 37: // left
+                    this.headDiv.focus();
+                    e.preventDefault();
+                    break;
+                case 38: // up
+                    if (this.rootDiv.previousSibling)
+                        this.rootDiv.previousSibling.owningUnit.bodyDiv.focus();
+                        e.preventDefault();
+                    break;
+                case 40: // down
+                    if (this.rootDiv.nextSibling)
+                        this.rootDiv.nextSibling.owningUnit.bodyDiv.focus();
+                        e.preventDefault();
+                    break;
+                case 13: // enter                    
+                    var neo = this.addNew(this);
+                    neo.bodyDiv.focus();
+                    e.preventDefault(); // don't add a new line break to it
+                    break;
+                case 46: // delete
+                    pg.controls.deleteCurrent();
+                    pg.controls.currentUnit.bodyDiv.focus();
+                    e.preventDefault();
+                    break;
+                case 49: // 1
+                    this.setStatus(pg.Status.BLANK);
+                    e.preventDefault();
+                    break;
+                case 50: // 2
+                    this.setStatus(pg.Status.UNFINISHED);
+                    e.preventDefault();
+                    break;
+                case 51: // 3
+                    this.setStatus(pg.Status.BAD);
+                    e.preventDefault();
+                    break;
+                case 52: // 4
+                    this.setStatus(pg.Status.OK);
+                    e.preventDefault();
+                    break;
+                case 53: // 5
+                    this.setStatus(pg.Status.GREAT);
+                    e.preventDefault();
+                    break;
+            }
+        }
+    }).bind(this));
     
-    // summary - only visible when not expanded
-    this.summaryDiv = document.createElement("td");
-    this.summaryDiv.className = "unit-summary";
     this.setExpanded(true);
-    
-    var expandBtn = document.createElement("button");
-    expandBtn.innerHTML = "Expand";
-    expandBtn.addEventListener("click", (function(e) { this.setExpanded(true); }).bind(this));
-    this.summaryDiv.appendChild(expandBtn);
     
     this.editorDiv.appendChild(headContainer);
     this.editorDiv.appendChild(this.bodyDiv);
-    this.editorDiv.appendChild(this.summaryDiv);
     this.rootDiv.appendChild(this.editorDiv);
 };
 pg.TextUnit.prototype.getText = function() {
@@ -480,12 +600,15 @@ pg.TextUnit.prototype.setSelected = function(s) {
 
 // add a new text unit after the indicated one
 pg.TextUnit.prototype.addNew = function(at) {
-    if ((at === undefined) || !at.rootDiv.nextSibling) { // the given unit is the last one or no unit is given
-        pg.workspace.appendChild((new pg.TextUnit()).rootDiv);
+    var neo = new pg.TextUnit();
+    if ((at == null) || !at.rootDiv.nextSibling) { // the given unit is the last one or no unit is given
+        pg.workspace.appendChild(neo.rootDiv);
     } else { // this is not the last node
-        pg.workspace.insertBefore((new pg.TextUnit()).rootDiv, at.rootDiv.nextSibling);
+        pg.workspace.insertBefore(neo.rootDiv, at.rootDiv.nextSibling);
     }
     pg.requireSave();
+    // return the created unit
+    return neo;
 }
 pg.TextUnit.prototype.deleteCurrent = function() {
     pg.workspace.removeChild(this.rootDiv);
@@ -539,10 +662,6 @@ pg.TextUnit.prototype.deleteCurrent = function() {
     includeNotes.addEventListener("change", execSearch);
     includeText.addEventListener("change", execSearch);
 })();
-
-//=================
-// INITIALIZE
-//================
 
 pg.load();
 // append version number to the title
