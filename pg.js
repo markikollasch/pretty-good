@@ -11,7 +11,7 @@ var pg = pg || {};
 // micro versions increase for small features and bugfixes
 // minor versions increase when some set of related features is "done";
 // major versions not yet defined
-pg.version = "0.1.1";
+pg.version = "0.2.1";
 
 pg.workspace = document.createElement("div");
 pg.workspace.id = "workspace";
