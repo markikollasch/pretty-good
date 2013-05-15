@@ -49,8 +49,8 @@ input[type="file"] {
     display: none;
 }
 
-.workspace {
-    background-color: white;
+#workspace {
+    margin-top: 100px;
 }
 
 .text-unit {
@@ -58,8 +58,11 @@ input[type="file"] {
     width: 100%;
     height: 100%;
     border-collapse: collapse;
-    border: 1px solid black;
     margin-top: 3px; /* A little space between units */
+}
+.text-unit[data-selected="true"] {
+    /* background-color: #ffffff; */
+    outline: 2px dotted blue;
 }
 button.status-0,
 .text-unit[data-status="0"] .unit-head,
@@ -129,6 +132,7 @@ button.status-4,
     cursor: text;
     border: 1px solid black;
     vertical-align: top;
+    background-color: #ffffff;
 }
 .text-unit[data-expanded="false"] .unit-body {
     display: none;
@@ -160,13 +164,15 @@ button.status-4,
     font-family: monospace;
     background-color: #000000;
     color: #ffffff;
-    /* experimental alternative UI
+}
+
+#header {
     position: fixed;
-    bottom: 0;
-    */
+    width: 100%;
+    top: 0;
 }
 
 [contenteditable="true"]:active,
 [contenteditable="true"]:focus {
-    outline: 2px dashed red;
+    outline: none;
 }

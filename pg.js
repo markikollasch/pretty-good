@@ -65,7 +65,6 @@ pg.obliterateCurrentDataFromJSON = function(raw){
         if (obliterate) {
             pg.titleElement.innerHTML = obj.title;
             pg.authorElement.innerHTML = obj.author;
-            pg.controls.remove();
             while (pg.workspace.hasChildNodes()) {
                 pg.workspace.removeChild(pg.workspace.lastChild);
             }
@@ -104,6 +103,20 @@ pg.exportFile = function(){
     var uri = "data:application/x-download;charset=utf-8," + encodeURIComponent(pg.currentDataToJSON());
     // and download it
     window.location.assign(uri);
+};
+
+// Used for editing of things meant only to be a single line
+// such as the title and author fields
+pg.cleanInput = function(){
+    // do not allow insertion of anything but text
+    // if there's anything but text in this
+    // - which is to say, if it has any element children
+    // remove them
+    while (!!this.firstElementChild) {
+        this.removeChild(title.firstElementChild);
+    }
+    // save
+    pg.requireSave();
 };
 
 //// local save/load
@@ -283,6 +296,8 @@ pg.controls = new (function(){
     addBtn.addEventListener("click", (function(e) {
         if (!!this.currentUnit) {
             this.currentUnit.addNew(this.currentUnit);
+            // attach to the newly added unit
+            this.attachTo(this.currentUnit.rootDiv.nextSibling.owningUnit);
         }
         else {
             this.attachTo(pg.addFirst());
@@ -294,14 +309,14 @@ pg.controls = new (function(){
     delBtn.innerHTML = "Delete!";
     // TODO: make this safer
     delBtn.addEventListener("click", (function(e) {
-        if (!!this.currentUnit) {
+        if (!!this.currentUnit && window.confirm("This will delete the current unit. Proceed?")) {
             this.currentUnit.deleteCurrent();
             // make sure the controls attach properly too
             if (!!this.div.previousSibling) {
-                this.currentUnit = this.div.previousSibling.owningUnit;
+                this.attachTo(this.div.previousSibling.owningUnit);
             }
             else {
-                this.currentUnit = null;
+                this.attachTo(null);
             }
         }
     }).bind(this));
@@ -321,7 +336,6 @@ pg.controls = new (function(){
             var swap = pg.workspace.replaceChild(prev, this.currentUnit.rootDiv);
             pg.workspace.insertBefore(swap, prev);
             // make sure the controls attach properly too
-            this.currentUnit = this.div.previousSibling.owningUnit;
         }
     }).bind(this));
     this.div.appendChild(moveUpBtn);
@@ -330,40 +344,31 @@ pg.controls = new (function(){
     moveDownBtn.innerHTML = "Move Down";
     moveDownBtn.addEventListener("click", (function(e) {
         // insert this element's next sibling (if one exists) before it
-        var next = this.currentUnit.rootDiv.nextSibling.nextSibling; // the next sibling is the controls, so we want two
+        var next = this.currentUnit.rootDiv.nextSibling;
         if (!!next) {
             var swap = pg.workspace.replaceChild(next, this.currentUnit.rootDiv);
             pg.workspace.insertBefore(swap, next.nextSibling);
-            // make sure the controls attach properly too
-            this.currentUnit = this.div.previousSibling.owningUnit;
         }
     }).bind(this));
     this.div.appendChild(moveDownBtn);
     
-    // move the controls to just below the specified unit
-    // "null" for beginning of list
+    // attach the controls to the given unit
     this.attachTo = function(unit) {
-        if (!!unit) {
-            var before = unit.rootDiv.nextSibling;
-            pg.workspace.insertBefore(this.div, before);
-            this.currentUnit = unit;
+        // TODO: change selected unit appearance to reflect connection
+        if (!!this.currentUnit) {
+            this.currentUnit.setSelected(false);
         }
-        else {
-            pg.workspace.appendChild(this.div);
-        }
+        this.currentUnit = unit;
+        this.currentUnit.setSelected(true);
     };
     
-    // remove the controls so the workspace contains only units
-    this.remove = function() {
-        if (!!this.currentUnit && this.div.parentNode == pg.workspace) {
-            pg.workspace.removeChild(this.div);
-        }
-    };
+    // insert it
+    document.getElementById("header").appendChild(this.div);
 })();
 
 // visually represents and manipulates a text unit
 pg.TextUnit = function(t, n, s) {
-    /*  <table class="text-unit" data-status="Whatever">
+    /*  <table class="text-unit" data-status="Whatever" data-selected="false">
      *      <tr class="unit-editor">
      *          <td class="head-container"><div class="unit-head"></div></td>
      *          <td class="unit-body"></td>
@@ -380,7 +385,7 @@ pg.TextUnit = function(t, n, s) {
     this.alterStatus(status);
     // provide access to this abstraction from the DOM
     this.rootDiv.owningUnit = this;
-    
+    this.setSelected(false);
     this.editorDiv = document.createElement("tr");
     this.editorDiv.className = "unit-editor";
     
@@ -420,11 +425,6 @@ pg.TextUnit = function(t, n, s) {
     expandBtn.innerHTML = "Expand";
     expandBtn.addEventListener("click", (function(e) { this.setExpanded(true); }).bind(this));
     this.summaryDiv.appendChild(expandBtn);
-    
-    // show controls only for the unit under the mouse
-    this.rootDiv.addEventListener("mouseover", (function() {
-        pg.controls.attachTo(this);
-    }).bind(this));
     
     this.editorDiv.appendChild(headContainer);
     this.editorDiv.appendChild(this.bodyDiv);
@@ -469,7 +469,15 @@ pg.TextUnit.prototype.getExpanded = function() {
 };
 pg.TextUnit.prototype.setExpanded = function(e) {
     this.rootDiv.setAttribute("data-expanded", e ? "true" : "false");
-}
+};
+
+pg.TextUnit.prototype.getSelected = function() {
+    return (this.rootDiv.getAttribute("data-selected") == "true");
+};
+pg.TextUnit.prototype.setSelected = function(s) {
+    this.rootDiv.setAttribute("data-selected", s ? "true" : "false");
+};
+
 // add a new text unit after the indicated one
 pg.TextUnit.prototype.addNew = function(at) {
     if ((at === undefined) || !at.rootDiv.nextSibling) { // the given unit is the last one or no unit is given
@@ -537,3 +545,4 @@ pg.TextUnit.prototype.deleteCurrent = function() {
 //================
 
 pg.load();
+// append version number to the title

@@ -5,7 +5,7 @@ Pretty Good is a tool for writers to organize and visualize their writing.
 ## Recommended usage
 When you begin a new writing project, think of your unwritten text as being in many discrete sections. Start by replacing my title and author's name with yours. Then, start writing in the blank new section automatically created.
 
-In the left-hand column, place notes about what you hope to accomplish in that section. The larger column on the right will contain your draft. Hover your mouse over the section to see more controls: from there, you can color-code your section according to the draft's progress (recommended usage: white means Blank, gray means Unfinished, red means Bad, yellow means Pretty Good, green means Finished), add new sections, and delete or rearrange sections.
+In the left-hand column, place notes about what you hope to accomplish in that section. The larger column on the right will contain your draft. More controls are visible at the top: you can color-code your section according to the draft's progress (recommended usage: white means Blank, gray means Unfinished, red means Bad, yellow means Pretty Good, green means Finished), add new sections, and delete or rearrange sections.
 
 Pretty Good will automatically save your progress on your computer, using the Local Storage API of modern browsers. This is completely secure: no data is sent to the server it is hosted upon. However, it is both possible and encouraged to download its source code and use a local copy of Pretty Good, or host a version on your own server.
 

@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <title>Pretty Good - a writer's tool</title>
+        <title>Pretty Good</title>
         <meta charset="UTF-8" />
         <link href="default.css" rel="stylesheet" type="text/css" title="Default Style">
         <link href="LICENSE.md" rel="copyright">
     </head>
     <body>
         <div id="header"> <!-- main menu content goes in here -->
-            <h2 id="title" contenteditable="true" oninput="pg.requireSave();">Pretty Good</h2>&nbsp;
-            <h3 id="author-container">by <span id="author" contenteditable="true" oninput="pg.requireSave();">Mark Kollasch</span>&nbsp;</h3>
+            <h2 id="title" contenteditable="true" oninput="pg.cleanInput();">Pretty Good</h2>&nbsp;
+            <h3 id="author-container">by <span id="author" contenteditable="true" oninput="pg.cleanInput();">Mark Kollasch</span>&nbsp;</h3>
             <a id="source" href="https://github.com/markikollasch/pretty-good">source code</a>
             <a id="about" href="about.html">about</a>
             <span id="saving" data-saving="false"></span>
@@ -22,8 +22,8 @@
             <input id="search" type="search" placeholder="Filter by..."></input>
             <label for="search-notes"><input id="search-notes" type="checkbox" />Notes</label>
             <label for="search-text"><input id="search-text" type="checkbox" />Text</label>
-            <span id="word-count">???</span> <!-- TODO: implement word counting -->
-        </div>
+            <span id="word-count">???</span>
+        </div> <!-- header -->
         <script type="text/javascript" src="pg.js"></script>
     </body>
 </html>
