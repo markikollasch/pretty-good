@@ -663,5 +663,6 @@ pg.TextUnit.prototype.deleteCurrent = function() {
     includeText.addEventListener("change", execSearch);
 })();
 
+// adjust height
+document.getElementById("workspace").style.marginTop = document.getElementById("header").offsetHeight + "px";
 pg.load();
-// append version number to the title
