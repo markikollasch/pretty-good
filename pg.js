@@ -686,6 +686,17 @@ pg.columnToggle = function(wide) {
     includeText.addEventListener("change", execSearch);
 })();
 
-// adjust height
-document.getElementById("workspace").style.marginTop = document.getElementById("header").offsetHeight + "px";
+pg.adjustHeight = function(){
+    var headerHeight = document.getElementById("header").offsetHeight;
+    pg.workspace.style.top = headerHeight + "px";
+    pg.workspace.style.maxHeight = ( window.innerHeight - headerHeight ) + "px";
+};
+(function() {
+    pg.adjustHeight();
+    window.onresize = function() { pg.adjustHeight(); };
+})();
+
+pg.adjustHeight();
+
+
 pg.load();
