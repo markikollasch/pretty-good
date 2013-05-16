@@ -157,7 +157,7 @@ pg.load = function(){
 // export all text (but not notes) to a text file
 pg.exportText = function(){
     console.log("exporting");
-    var allText = "";
+    var allText = pg.titleElement.innerHTML + "\n" + pg.authorElement.innerHTML + "\n\n";
     var elements = pg.workspace.children;
     for (var i=0; i<elements.length; i++) {
         if (elements[i] != pg.controls.div) {
