@@ -96,12 +96,18 @@ button.status-4,
 }
 
 .head-container {
-    width: 30%;
+    /* width: 25%; */
     height: 100%;
     border: 1px solid black;
     margin: 0;
     padding: 0;
     vertical-align: top;
+}
+#workspace[data-column-width="wide"] .head-container {
+    width: 50%;
+}
+#workspace[data-column-width="narrow"] .head-container {
+    width: 25%;
 }
 .unit-head {
     height: 100%;
@@ -121,15 +127,21 @@ button.status-4,
     height: 1.3em;
 }
 
+.body-container {
+    height: 100%;
+    border: 1px solid black;
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+}
 .unit-body {
-    width: 70%;
+    height: 100%;
     font-family: monospace;
     cursor: text;
-    border: 1px solid black;
-    vertical-align: top;
-    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
 }
-.text-unit[data-expanded="false"] .unit-body {
+.text-unit[data-expanded="false"] .body-container {
     display: none;
     height: 0;
 }

@@ -15,6 +15,7 @@ pg.version = "0.2.1";
 
 pg.workspace = document.createElement("div");
 pg.workspace.id = "workspace";
+pg.workspace.setAttribute("data-column-width", "narrow");
 pg.titleElement = document.getElementById("title");
 pg.authorElement = document.getElementById("author");
 document.body.appendChild(pg.workspace);
@@ -374,7 +375,7 @@ pg.TextUnit = function(t, n, s) {
     /*  <table class="text-unit" data-status="Whatever" data-selected="false">
      *      <tr class="unit-editor">
      *          <td class="head-container"><div class="unit-head"></div></td>
-     *          <td class="unit-body"></td>
+     *          <td class="body-container"><div class="unit-body"></div></td>
      *      </tr>
      *  </table>
      */
@@ -473,9 +474,12 @@ pg.TextUnit = function(t, n, s) {
     }).bind(this));
     
     // body
-    this.bodyDiv = document.createElement("td");
+    var bodyContainer = document.createElement("td");
+    bodyContainer.className = "body-container";
+    this.bodyDiv = document.createElement("div");
     this.bodyDiv.className = "unit-body";
     this.bodyDiv.contentEditable = true;
+    bodyContainer.appendChild(this.bodyDiv);
     this.alterText(text);
     // Require saving after every change to the content
     this.bodyDiv.addEventListener("input", function(e) {
@@ -548,7 +552,7 @@ pg.TextUnit = function(t, n, s) {
     this.setExpanded(true);
     
     this.editorDiv.appendChild(headContainer);
-    this.editorDiv.appendChild(this.bodyDiv);
+    this.editorDiv.appendChild(bodyContainer);
     this.rootDiv.appendChild(this.editorDiv);
 };
 pg.TextUnit.prototype.getText = function() {
@@ -620,6 +624,25 @@ pg.TextUnit.prototype.deleteCurrent = function() {
     pg.requireSave();
 };
 
+// alter column width
+pg.columnToggle = function(wide) {
+    if (!!wide) { // a value was passed, so use it explicitly
+        if (wide == "wide") {
+            pg.workspace.setAttribute("data-column-width","wide");
+        }
+        else if (wide == "narrow") {
+            pg.workspace.setAttribute("data-column-width","narrow");
+        }
+    }
+    else { // no value was passed, so toggle
+        if (pg.workspace.getAttribute("data-column-width") == "narrow") {
+            pg.workspace.setAttribute("data-column-width", "wide");
+        }
+        else {
+            pg.workspace.setAttribute("data-column-width", "narrow");
+        }
+    }
+};
 
 //===============================================
 // Initialize
