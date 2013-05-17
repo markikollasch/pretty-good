@@ -166,6 +166,10 @@ button.status-4,
     top: 0;
 }
 
+[contenteditable="true"] *{
+    white-space: pre-wrap;
+}
+
 [contenteditable="true"]:active,
 [contenteditable="true"]:focus {
     outline: none;

@@ -11,7 +11,7 @@ var pg = pg || {};
 // micro versions increase for small features and bugfixes
 // minor versions increase when some set of related features is "done";
 // major versions not yet defined
-pg.version = "0.2.1";
+pg.version = "0.2.3";
 
 pg.workspace = document.createElement("div");
 pg.workspace.id = "workspace";
@@ -120,6 +120,41 @@ pg.cleanInput = function(){
     pg.requireSave();
 };
 
+// strip all tags except <br> and <p> from the specified element
+pg.sanitizeField = function(elem){
+    // descend the tree, exploding each node
+    var newElem = document.createElement("null");
+    while (elem.hasChildNodes()) {
+        switch (elem.firstChild.nodeName.toLowerCase()) {
+            case "#text":
+            case "br": // it is already sanitized
+                newElem.appendChild(elem.firstChild);
+                break;
+            case "p": // put a <br> and then sanitize the text within
+            case "div":
+                newElem.appendChild(document.createElement("br"));
+                var ip = elem.firstChild;
+                while (ip.hasChildNodes()) {
+                    elem.insertBefore(ip.firstChild, ip);
+                }
+                elem.removeChild(ip);
+                break;
+            default: // just use its interior content
+                var ip = elem.firstChild;
+                while (ip.hasChildNodes()) {
+                    elem.insertBefore(ip.firstChild, ip);
+                }
+                elem.removeChild(ip);
+                break;
+        }
+    }
+    newElem.normalize();
+    // copy them all back to the original node
+    while (newElem.hasChildNodes()) {
+        elem.appendChild(newElem.firstChild);
+    }
+};
+
 //// local save/load
 pg.saving = false;
 pg.saveStatus = document.getElementById("saving");
@@ -181,7 +216,6 @@ pg.purge = function(){
         
         pg.titleElement.innerHTML = "Pretty Good v" + pg.version;
         pg.authorElement.innerHTML = "Mark Kollasch";
-        pg.controls.remove();
         while (pg.workspace.hasChildNodes()) {
             pg.workspace.removeChild(pg.workspace.lastChild);
         }
@@ -356,7 +390,6 @@ pg.controls = new (function(){
     
     // attach the controls to the given unit
     this.attachTo = function(unit) {
-        // TODO: change selected unit appearance to reflect connection
         if (!!this.currentUnit) {
             this.currentUnit.setSelected(false);
         }
@@ -401,9 +434,14 @@ pg.TextUnit = function(t, n, s) {
     headContainer.appendChild(this.headDiv);
     this.alterNotes(notes);
     // Require saving after every change to the content
-    this.headDiv.addEventListener("input", function(e) {
+    this.headDiv.addEventListener("input", (function(e) {
         pg.updateWordCount();
-        pg.requireSave(); });
+        pg.requireSave();
+    }).bind(this));
+    this.headDiv.addEventListener("blur", (function(e) {
+        pg.sanitizeField(this.headDiv);
+        pg.requireSave();
+    }).bind(this));
     // Ensure the controls point to the active unit
     this.headDiv.addEventListener("focus", (function(e) {
         pg.controls.attachTo(this);
@@ -482,9 +520,14 @@ pg.TextUnit = function(t, n, s) {
     bodyContainer.appendChild(this.bodyDiv);
     this.alterText(text);
     // Require saving after every change to the content
-    this.bodyDiv.addEventListener("input", function(e) {
+    this.bodyDiv.addEventListener("input", (function(e) {
         pg.updateWordCount();
-        pg.requireSave(); });
+        pg.requireSave();
+    }).bind(this));
+    this.bodyDiv.addEventListener("blur", (function(e) {
+        pg.sanitizeField(this.bodyDiv);
+        pg.requireSave();
+    }).bind(this));
     // Ensure the controls point to the active unit
     this.bodyDiv.addEventListener("focus", (function(e) {
         pg.controls.attachTo(this);
