@@ -11,7 +11,7 @@ var pg = pg || {};
 // micro versions increase for small features and bugfixes
 // minor versions increase when some set of related features is "done";
 // major versions not yet defined
-pg.version = "0.2.3";
+pg.version = "0.2.4";
 
 pg.workspace = document.createElement("div");
 pg.workspace.id = "workspace";
@@ -448,15 +448,15 @@ pg.TextUnit = function(t, n, s) {
     }).bind(this));
     // Keyboard shortcuts:
     this.headDiv.addEventListener("keydown", (function(e) {
-        /*  Ctrl+Up: move focus to the notes above, if it exists
-            Ctrl+Down: move focus to the notes below, if it exists
-            Ctrl+Right: expand if collapsed, and move focus to text
-            Ctrl+Left: nothing
-            Ctrl+Enter: insert new unit and move focus to notes below
-            Ctrl+Delete: delete the current unit
-            ctrl+1 through 5: colorize current
+        /*  Alt+Up: move focus to the notes above, if it exists
+            Alt+Down: move focus to the notes below, if it exists
+            Alt+Right: expand if collapsed, and move focus to text
+            Alt+Left: nothing
+            Alt+Enter: insert new unit and move focus to notes below
+            Alt+Delete: delete the current unit
+            Alt+1 through 5: colorize current
         */
-        if (e.ctrlKey) {
+        if (e.altKey) {
             switch(e.keyCode) {
                 case 37: // left - collapse (if expanded)
                     this.setExpanded(false);
@@ -534,15 +534,15 @@ pg.TextUnit = function(t, n, s) {
     }).bind(this));
     // Keyboard shortcuts:
     this.bodyDiv.addEventListener("keydown", (function(e) {
-        /*  Ctrl+Up: move focus to the text above, if it exists
-            Ctrl+Down: move focus to the text below, if it exists
-            Ctrl+Right: nothing
-            Ctrl+Left: move to notes
-            Ctrl+Enter: insert new unit and move focus to text below
-            Ctrl+Delete: delete the current unit
-            ctrl+1 through 5: colorize current
+        /*  Alt+Up: move focus to the text above, if it exists
+            Alt+Down: move focus to the text below, if it exists
+            Alt+Right: nothing
+            Alt+Left: move to notes
+            Alt+Enter: insert new unit and move focus to text below
+            Alt+Delete: delete the current unit
+            Alt+1 through 5: colorize current
         */
-        if (e.ctrlKey) {
+        if (e.altKey) {
             switch(e.keyCode) {
                 case 37: // left
                     this.headDiv.focus();
